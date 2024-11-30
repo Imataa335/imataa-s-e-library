@@ -64,7 +64,7 @@
         }
         .book-item h3 {
             margin: 0;
-            font-size: 14px; /* Reduced font size for book titles */
+            font-size: 14px;
         }
         .program-nav {
             margin-top: 20px;
@@ -77,7 +77,7 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            display: none; /* Start hidden */
+            display: none;
         }
         .toggle-button {
             background: #007bff;
@@ -91,27 +91,35 @@
         }
         .upload-container {
             margin-top: 10px;
-            display: none; /* Start hidden */
+            display: none;
         }
         #readerView {
-            display: none; /* Start hidden */
+            display: none;
         }
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 800px; /* Increased width of reading view to 800px */
+            grid-template-columns: 1fr 800px;
             gap: 20px;
         }
         @media (max-width: 800px) {
             .dashboard-grid {
-                grid-template-columns: 1fr; /* Stack on smaller screens */
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="dashboardContainer">
+        <div id="loginContainer">
             <h1>Welcome to IMATAAs E-LIBRARY</h1>
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button id="loginBtn">Login</button>
+            <p id="loginError" style="color: red; display: none;"></p>
+        </div>
+
+        <div id="dashboardContainer" style="display: none;">
             <nav id="nav">
                 <div>
                     <button id="switchToAdminBtn">Switch to Admin</button>
@@ -123,18 +131,9 @@
             </nav>
 
             <nav>
-                <a href="#loginContainer">Login</a>
                 <a href="#searchContainer">Search Books</a>
                 <a href="#readerView">Reading View</a>
             </nav>
-
-            <div class="login-container" id="loginContainer">
-                <h2>Login</h2>
-                <input type="text" id="username" placeholder="Username" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button id="loginBtn">Login</button>
-                <p id="loginError" style="color: red; display: none;"></p>
-            </div>
 
             <div class="dashboard-grid">
                 <div>
@@ -156,7 +155,6 @@
                 </div>
             </div>
 
-            <!-- Programs Section -->
             <div class="program-nav" id="programNav" style="display: none;">
                 <h2>Programs</h2>
                 <button class="toggle-button" onclick="toggleSection('phn')">PHN</button>
@@ -207,24 +205,6 @@
         const adminCredentials = { username: 'admin', password: 'admin123' };
         const clientCredentials = { username: 'client', password: 'client123' };
 
-        document.getElementById('dashboardContainer').style.display = 'block';
-
-        document.getElementById('switchToAdminBtn').addEventListener('click', () => {
-            document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('switchToAdminBtn').style.display = 'none';
-            document.getElementById('switchToClientBtn').style.display = 'inline-block';
-            document.getElementById('userRole').innerText = 'Admin';
-        });
-
-        document.getElementById('switchToClientBtn').addEventListener('click', () => {
-            isAdmin = false;
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('switchToClientBtn').style.display = 'none';
-            document.getElementById('switchToAdminBtn').style.display = 'inline-block';
-            document.getElementById('userRole').innerText = 'Client';
-            updateRoleView();
-        });
-
         document.getElementById('loginBtn').addEventListener('click', () => {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -242,6 +222,14 @@
                 document.getElementById('loginError').style.display = 'block';
             }
         });
+
+        function updateRoleView() {
+            document.getElementById('dashboardContainer').style.display = 'block';
+            document.getElementById('programNav').style.display = 'block';
+            document.querySelectorAll('.upload-container').forEach(container => {
+                container.style.display = isAdmin ? 'block' : 'none'; // Show upload only for admin
+            });
+        }
 
         document.getElementById('searchBtn').addEventListener('click', () => {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -309,12 +297,17 @@
             }
 
             for (let i = 0; i < bookFiles.length; i++) {
+                if (bookFiles[i].type !== 'application/pdf') {
+                    alert("Only PDF files are allowed.");
+                    return;
+                }
                 const fileURL = URL.createObjectURL(bookFiles[i]);
                 books[program].push({ title: bookFiles[i].name, fileURL });
             }
 
             document.getElementById(program.toLowerCase() + 'BookFiles').value = '';
             displayProgramBooks(program); // Refresh the book list immediately after upload
+            displayBooks(); // Ensure all books are displayed for clients
         }
 
         function viewBook(fileURL) {
@@ -338,15 +331,6 @@
             document.getElementById('readerView').style.display = 'none';
             document.getElementById('bookViewer').src = '';
         });
-
-        function updateRoleView() {
-            document.getElementById('programNav').style.display = 'block';
-            document.querySelectorAll('.upload-container').forEach(container => {
-                container.style.display = isAdmin ? 'block' : 'none'; // Show upload only for admin
-            });
-        }
-
-        updateRoleView();
     </script>
 </body>
 </html>
