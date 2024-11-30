@@ -135,6 +135,8 @@
                 <a href="#readerView">Reading View</a>
             </nav>
 
+            <button id="backToHomeBtn">Back to Home</button>
+
             <div class="dashboard-grid">
                 <div>
                     <div id="searchContainer">
@@ -221,6 +223,11 @@
                 document.getElementById('loginError').innerText = "Invalid credentials! Please try again.";
                 document.getElementById('loginError').style.display = 'block';
             }
+        });
+
+        document.getElementById('backToHomeBtn').addEventListener('click', () => {
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'block';
         });
 
         function updateRoleView() {
