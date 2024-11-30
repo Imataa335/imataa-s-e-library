@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Library</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        footer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .book-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .book-item h3 {
+            margin: 0;
+            font-size: 14px; /* Reduced font size for book titles */
+        }
+        .program-nav {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .subject-section {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: none; /* Start hidden */
+        }
+        .toggle-button {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+        }
+        #readerView {
+            display: none; /* Start hidden */
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 800px; /* Increased width of reading view to 800px */
+            gap: 20px;
+        }
+        @media (max-width: 800px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr; /* Stack on smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="dashboardContainer">
+            <h1>Welcome to IMATAAs E-LIBRARY</h1>
+            <nav id="nav">
+                <div>
+                    <button id="switchToAdminBtn">Switch to Admin</button>
+                    <button id="switchToClientBtn" style="display: none;">Switch to Client</button>
+                </div>
+                <div>
+                    <span id="userRole">Client</span>
+                </div>
+            </nav>
+
+            <nav>
+                <a href="#loginContainer">Login</a>
+                <a href="#searchContainer">Search Books</a>
+                <a href="#readerView">Reading View</a>
+            </nav>
+
+            <div class="login-container" id="loginContainer">
+                <h2>Login</h2>
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button id="loginBtn">Login</button>
+                <p id="loginError" style="color: red; display: none;"></p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div>
+                    <div id="searchContainer">
+                        <h2>Search Books</h2>
+                        <input type="text" id="searchInput" placeholder="Search by subject heading">
+                        <button id="searchBtn">Search</button>
+                    </div>
+                    <div class="book-list" id="bookListContainer" style="display: none;">
+                        <h2>Book List</h2>
+                    </div>
+                </div>
+                <div id="readerView">
+                    <h2>Reading View</h2>
+                    <div id="readerContainer">
+                        <iframe id="bookViewer" style="width: 100%; height: 600px;" frameborder="0"></iframe>
+                    </div>
+                    <button id="closeReaderBtn">Close Reader</button>
+                </div>
+            </div>
+
+            <!-- Programs Section -->
+            <div class="program-nav" id="programNav" style="display: none;">
+                <h2>Programs</h2>
+                <button class="toggle-button" onclick="toggleSection('phn')">PHN</button>
+                <div class="subject-section" id="phn">
+                    <h3>PHN Books</h3>
+                    <div class="book-list" id="phnBooks"></div>
+                </div>
+                <button class="toggle-button" onclick="toggleSection('rm')">RM</button>
+                <div class="subject-section" id="rm">
+                    <h3>RM Books</h3>
+                    <div class="book-list" id="rmBooks"></div>
+                </div>
+                <button class="toggle-button" onclick="toggleSection('rn')">RN</button>
+                <div class="subject-section" id="rn">
+                    <h3>RN Books</h3>
+                    <div class="book-list" id="rnBooks"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        @imataa
+    </footer>
+
+    <script>
+        const books = {
+            PHN: [],
+            RM: [],
+            RN: []
+        };
+        let isAdmin = false;
+        const adminCredentials = { username: 'admin', password: 'admin123' };
+        const clientCredentials = { username: 'client', password: 'client123' };
+
+        document.getElementById('dashboardContainer').style.display = 'block';
+
+        document.getElementById('switchToAdminBtn').addEventListener('click', () => {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('switchToAdminBtn').style.display = 'none';
+            document.getElementById('switchToClientBtn').style.display = 'inline-block';
+            document.getElementById('userRole').innerText = 'Admin';
+        });
+
+        document.getElementById('switchToClientBtn').addEventListener('click', () => {
+            isAdmin = false;
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('switchToClientBtn').style.display = 'none';
+            document.getElementById('switchToAdminBtn').style.display = 'inline-block';
+            document.getElementById('userRole').innerText = 'Client';
+            updateRoleView();
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                isAdmin = true;
+                document.getElementById('loginContainer').style.display = 'none';
+                updateRoleView();
+            } else if (username === clientCredentials.username && password === clientCredentials.password) {
+                isAdmin = false;
+                document.getElementById('loginContainer').style.display = 'none';
+                updateRoleView();
+            } else {
+                document.getElementById('loginError').innerText = "Invalid credentials! Please try again.";
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            displayBooks(searchTerm);
+        });
+
+        function displayBooks(searchTerm = '') {
+            const filteredBooks = Object.values(books).flat().filter(book => 
+                book.title.toLowerCase().includes(searchTerm)
+            );
+
+            const bookListContainer = document.getElementById('bookListContainer');
+            bookListContainer.innerHTML = '';
+
+            filteredBooks.forEach((book) => {
+                const bookItem = document.createElement('div');
+                bookItem.className = 'book-item';
+                bookItem.innerHTML = `
+                    <h3>${book.title}</h3>
+                    <div>
+                        <button onclick="viewBook('${book.fileURL}')">Read</button>
+                    </div>
+                `;
+                bookListContainer.appendChild(bookItem);
+            });
+
+            bookListContainer.style.display = filteredBooks.length > 0 ? 'block' : 'none';
+        }
+
+        function toggleSection(subject) {
+            const section = document.getElementById(subject);
+            section.style.display = section.style.display === 'block' ? 'none' : 'block';
+            if (section.style.display === 'block') {
+                displayProgramBooks(subject);
+            }
+        }
+
+        function displayProgramBooks(program) {
+            const bookList = document.getElementById(program + 'Books');
+            bookList.innerHTML = '';
+            books[program].forEach(book => {
+                const bookItem = document.createElement('div');
+                bookItem.className = 'book-item';
+                bookItem.innerHTML = `
+                    <h3>${book.title}</h3>
+                    <button onclick="viewBook('${book.fileURL}')">Read</button>
+                `;
+                bookList.appendChild(bookItem);
+            });
+        }
+
+        function viewBook(fileURL) {
+            document.getElementById('bookViewer').src = fileURL + '#toolbar=0&navpanes=0&scrollbar=0';
+            document.getElementById('readerView').style.display = 'block';
+        }
+
+        document.getElementById('closeReaderBtn').addEventListener('click', () => {
+            document.getElementById('readerView').style.display = 'none';
+            document.getElementById('bookViewer').src = '';
+        });
+
+        function updateRoleView() {
+            document.getElementById('programNav').style.display = 'block';
+        }
+
+        updateRoleView();
+    </script>
+</body>
+</html>
