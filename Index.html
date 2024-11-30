@@ -89,6 +89,10 @@
             width: 100%;
             text-align: left;
         }
+        .upload-container {
+            margin-top: 10px;
+            display: none; /* Start hidden */
+        }
         #readerView {
             display: none; /* Start hidden */
         }
@@ -158,16 +162,31 @@
                 <button class="toggle-button" onclick="toggleSection('phn')">PHN</button>
                 <div class="subject-section" id="phn">
                     <h3>PHN Books</h3>
+                    <div class="upload-container" id="phnUpload" style="display: none;">
+                        <input type="file" id="phnBookFiles" accept=".pdf" multiple>
+                        <button onclick="uploadBooks('PHN')">Upload Books</button>
+                    </div>
+                    <button class="toggle-button" onclick="toggleUpload('phnUpload')">Toggle Upload</button>
                     <div class="book-list" id="phnBooks"></div>
                 </div>
                 <button class="toggle-button" onclick="toggleSection('rm')">RM</button>
                 <div class="subject-section" id="rm">
                     <h3>RM Books</h3>
+                    <div class="upload-container" id="rmUpload" style="display: none;">
+                        <input type="file" id="rmBookFiles" accept=".pdf" multiple>
+                        <button onclick="uploadBooks('RM')">Upload Books</button>
+                    </div>
+                    <button class="toggle-button" onclick="toggleUpload('rmUpload')">Toggle Upload</button>
                     <div class="book-list" id="rmBooks"></div>
                 </div>
                 <button class="toggle-button" onclick="toggleSection('rn')">RN</button>
                 <div class="subject-section" id="rn">
                     <h3>RN Books</h3>
+                    <div class="upload-container" id="rnUpload" style="display: none;">
+                        <input type="file" id="rnBookFiles" accept=".pdf" multiple>
+                        <button onclick="uploadBooks('RN')">Upload Books</button>
+                    </div>
+                    <button class="toggle-button" onclick="toggleUpload('rnUpload')">Toggle Upload</button>
                     <div class="book-list" id="rnBooks"></div>
                 </div>
             </div>
@@ -244,6 +263,7 @@
                     <h3>${book.title}</h3>
                     <div>
                         <button onclick="viewBook('${book.fileURL}')">Read</button>
+                        ${isAdmin ? `<button onclick="deleteBook('${book.title}', '${book.fileURL}')">Delete</button>` : ''}
                     </div>
                 `;
                 bookListContainer.appendChild(bookItem);
@@ -260,6 +280,11 @@
             }
         }
 
+        function toggleUpload(uploadId) {
+            const uploadContainer = document.getElementById(uploadId);
+            uploadContainer.style.display = uploadContainer.style.display === 'block' ? 'none' : 'block';
+        }
+
         function displayProgramBooks(program) {
             const bookList = document.getElementById(program + 'Books');
             bookList.innerHTML = '';
@@ -269,14 +294,44 @@
                 bookItem.innerHTML = `
                     <h3>${book.title}</h3>
                     <button onclick="viewBook('${book.fileURL}')">Read</button>
+                    ${isAdmin ? `<button onclick="deleteBook('${book.title}', '${book.fileURL}')">Delete</button>` : ''}
                 `;
                 bookList.appendChild(bookItem);
             });
         }
 
+        function uploadBooks(program) {
+            const bookFiles = document.getElementById(program.toLowerCase() + 'BookFiles').files;
+
+            if (bookFiles.length === 0) {
+                alert("Please select at least one book file to upload.");
+                return;
+            }
+
+            for (let i = 0; i < bookFiles.length; i++) {
+                const fileURL = URL.createObjectURL(bookFiles[i]);
+                books[program].push({ title: bookFiles[i].name, fileURL });
+            }
+
+            document.getElementById(program.toLowerCase() + 'BookFiles').value = '';
+            displayProgramBooks(program); // Refresh the book list immediately after upload
+        }
+
         function viewBook(fileURL) {
             document.getElementById('bookViewer').src = fileURL + '#toolbar=0&navpanes=0&scrollbar=0';
             document.getElementById('readerView').style.display = 'block';
+        }
+
+        function deleteBook(title, fileURL) {
+            if (confirm(`Are you sure you want to delete "${title}"?`)) {
+                for (const subject in books) {
+                    books[subject] = books[subject].filter(book => book.fileURL !== fileURL);
+                }
+                displayBooks();
+                displayProgramBooks('PHN');
+                displayProgramBooks('RM');
+                displayProgramBooks('RN');
+            }
         }
 
         document.getElementById('closeReaderBtn').addEventListener('click', () => {
@@ -286,6 +341,9 @@
 
         function updateRoleView() {
             document.getElementById('programNav').style.display = 'block';
+            document.querySelectorAll('.upload-container').forEach(container => {
+                container.style.display = isAdmin ? 'block' : 'none'; // Show upload only for admin
+            });
         }
 
         updateRoleView();
