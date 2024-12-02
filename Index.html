@@ -111,7 +111,7 @@
 <body>
     <div class="container">
         <div id="loginContainer">
-            <h1>Welcome to IMATAAs E-LIBRARY</h1>
+            <h1>WELCOME TO IMATAA E-LIBRARY</h1>
             <h2>Login</h2>
             <input type="text" id="username" placeholder="Username" required>
             <input type="password" id="password" placeholder="Password" required>
@@ -207,6 +207,16 @@
         const adminCredentials = { username: 'admin', password: 'admin123' };
         const clientCredentials = { username: 'client', password: 'client123' };
 
+        // Load books from localStorage on page load
+        window.onload = function() {
+            const storedBooks = JSON.parse(localStorage.getItem('uploadedBooks'));
+            if (storedBooks) {
+                for (const subject in storedBooks) {
+                    books[subject] = storedBooks[subject];
+                }
+            }
+        };
+
         document.getElementById('loginBtn').addEventListener('click', () => {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -236,6 +246,10 @@
             document.querySelectorAll('.upload-container').forEach(container => {
                 container.style.display = isAdmin ? 'block' : 'none'; // Show upload only for admin
             });
+            displayBooks(); // Load all books on dashboard view
+            displayProgramBooks('PHN');
+            displayProgramBooks('RM');
+            displayProgramBooks('RN');
         }
 
         document.getElementById('searchBtn').addEventListener('click', () => {
@@ -315,6 +329,11 @@
             document.getElementById(program.toLowerCase() + 'BookFiles').value = '';
             displayProgramBooks(program); // Refresh the book list immediately after upload
             displayBooks(); // Ensure all books are displayed for clients
+            saveBooksToLocalStorage(); // Save updated books to localStorage
+        }
+
+        function saveBooksToLocalStorage() {
+            localStorage.setItem('uploadedBooks', JSON.stringify(books));
         }
 
         function viewBook(fileURL) {
@@ -331,6 +350,7 @@
                 displayProgramBooks('PHN');
                 displayProgramBooks('RM');
                 displayProgramBooks('RN');
+                saveBooksToLocalStorage(); // Save updated books to localStorage after deletion
             }
         }
 
